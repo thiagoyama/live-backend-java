@@ -1,0 +1,1735 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Backend Java · REST API Games | LIVE 🎮</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap');
+
+:root {
+  --bg: #0a0a0f;
+  --green: #00ff88;
+  --cyan: #00e5ff;
+  --yellow: #ffe600;
+  --red: #ff3366;
+  --purple: #bf00ff;
+  --orange: #ff9500;
+  --card: #12121f;
+  --border: #1e1e35;
+  --text: #d0d0e8;
+  --dim: #666690;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Share Tech Mono', monospace;
+  overflow: hidden;
+  height: 100vh;
+  width: 100vw;
+  cursor: none;
+}
+
+.cursor {
+  position: fixed; width: 16px; height: 16px;
+  border: 2px solid var(--green); border-radius: 50%;
+  pointer-events: none; z-index: 9999;
+  transform: translate(-50%, -50%); mix-blend-mode: screen;
+}
+
+body::after {
+  content: ''; position: fixed; inset: 0;
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.06) 2px, rgba(0,0,0,0.06) 4px);
+  pointer-events: none; z-index: 100;
+}
+
+body::before {
+  content: ''; position: fixed; inset: 0;
+  background-image: linear-gradient(rgba(0,229,255,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(0,229,255,0.025) 1px, transparent 1px);
+  background-size: 48px 48px; pointer-events: none; z-index: 0;
+}
+
+#header {
+  position: fixed; top: 0; left: 0; right: 0; height: 52px;
+  background: rgba(10,10,15,0.97); border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 28px; z-index: 50;
+}
+
+.logo { font-family: 'Orbitron', sans-serif; font-weight: 900; font-size: 0.95rem; color: var(--green); letter-spacing: 0.12em; text-shadow: 0 0 20px var(--green); }
+.slide-counter { font-size: 0.78rem; color: var(--dim); letter-spacing: 0.1em; }
+.slide-counter b { color: var(--yellow); }
+
+#progress-bar {
+  position: fixed; top: 51px; left: 0; height: 2px;
+  background: linear-gradient(90deg, var(--green), var(--cyan));
+  transition: width 0.4s ease; z-index: 51; box-shadow: 0 0 10px var(--green);
+}
+
+#slides { position: fixed; inset: 0; z-index: 10; }
+
+.slide {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 64px 52px 68px; gap: 18px;
+  opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+}
+.slide.active { opacity: 1; pointer-events: all; }
+.slide.active > * { animation: slideUp 0.4s ease both; }
+.slide.active > *:nth-child(2) { animation-delay: 0.05s; }
+.slide.active > *:nth-child(3) { animation-delay: 0.10s; }
+.slide.active > *:nth-child(4) { animation-delay: 0.15s; }
+.slide.active > *:nth-child(5) { animation-delay: 0.20s; }
+.slide.active > *:nth-child(6) { animation-delay: 0.25s; }
+@keyframes slideUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+
+.section-tag {
+  font-size: 0.85rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--dim);
+  display: flex; align-items: center; gap: 10px;
+}
+.section-tag::before, .section-tag::after { content: ''; height: 1px; width: 36px; background: var(--border); }
+
+h1 { font-family: 'Orbitron', sans-serif; font-size: clamp(2.4rem, 5vw, 4rem); font-weight: 900; line-height: 1.1; text-align: center; color: #fff; }
+h1 .hl-green  { color: var(--green);  text-shadow: 0 0 30px var(--green); }
+h1 .hl-cyan   { color: var(--cyan);   text-shadow: 0 0 30px var(--cyan); }
+h1 .hl-yellow { color: var(--yellow); text-shadow: 0 0 30px var(--yellow); }
+h1 .hl-red    { color: var(--red);    text-shadow: 0 0 30px var(--red); }
+h1 .hl-purple { color: var(--purple); text-shadow: 0 0 30px var(--purple); }
+h1 .hl-orange { color: var(--orange); text-shadow: 0 0 30px var(--orange); }
+
+h2 { font-family: 'Orbitron', sans-serif; font-size: clamp(1.5rem, 2.8vw, 2.2rem); font-weight: 700; color: var(--cyan); text-align: center; }
+
+.subtitle { font-size: clamp(1rem, 1.8vw, 1.3rem); color: var(--dim); text-align: center; max-width: 680px; line-height: 1.7; }
+
+/* ── CARDS ── */
+.cards-grid { display: grid; gap: 14px; width: 100%; max-width: 960px; }
+.cards-grid.cols-2 { grid-template-columns: 1fr 1fr; }
+.cards-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+.cards-grid.cols-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+
+.card {
+  background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+  padding: 20px 22px; position: relative; overflow: hidden; transition: transform 0.2s;
+}
+.card:hover { transform: translateY(-2px); }
+.card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; }
+.card.green::before  { background: var(--green); }
+.card.cyan::before   { background: var(--cyan); }
+.card.yellow::before { background: var(--yellow); }
+.card.red::before    { background: var(--red); }
+.card.purple::before { background: var(--purple); }
+.card.orange::before { background: var(--orange); }
+.card-icon  { font-size: 2rem; margin-bottom: 8px; display: block; }
+.card-title { font-family: 'Orbitron', sans-serif; font-size: 0.95rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 8px; }
+.card.green .card-title  { color: var(--green); }
+.card.cyan .card-title   { color: var(--cyan); }
+.card.yellow .card-title { color: var(--yellow); }
+.card.red .card-title    { color: var(--red); }
+.card.purple .card-title { color: var(--purple); }
+.card.orange .card-title { color: var(--orange); }
+.card-text { font-size: 0.98rem; color: var(--dim); line-height: 1.65; }
+
+/* ── BADGES ── */
+.badge {
+  display: inline-block; font-size: 0.78rem; letter-spacing: 0.12em; text-transform: uppercase;
+  padding: 5px 13px; border-radius: 4px; font-family: 'Orbitron', sans-serif; font-weight: 700;
+}
+.badge.green  { background: rgba(0,255,136,0.1);  color: var(--green);  border: 1px solid rgba(0,255,136,0.3); }
+.badge.yellow { background: rgba(255,230,0,0.1);  color: var(--yellow); border: 1px solid rgba(255,230,0,0.3); }
+.badge.red    { background: rgba(255,51,102,0.1);  color: var(--red);   border: 1px solid rgba(255,51,102,0.3); }
+.badge.cyan   { background: rgba(0,229,255,0.1);   color: var(--cyan);  border: 1px solid rgba(0,229,255,0.3); }
+.badge.purple { background: rgba(191,0,255,0.1);   color: var(--purple);border: 1px solid rgba(191,0,255,0.3); }
+.badge.orange { background: rgba(255,149,0,0.1);   color: var(--orange);border: 1px solid rgba(255,149,0,0.3); }
+
+/* ── ALERTS ── */
+.alert { padding: 14px 22px; border-radius: 10px; font-size: 1rem; max-width: 900px; width: 100%; line-height: 1.6; }
+.alert.warn    { background: rgba(255,230,0,0.07);  border: 1px solid rgba(255,230,0,0.3);  color: var(--yellow); }
+.alert.info    { background: rgba(0,229,255,0.07);  border: 1px solid rgba(0,229,255,0.2);  color: var(--cyan); }
+.alert.success { background: rgba(0,255,136,0.07);  border: 1px solid rgba(0,255,136,0.2);  color: var(--green); }
+.alert.purple  { background: rgba(191,0,255,0.07);  border: 1px solid rgba(191,0,255,0.3);  color: var(--purple); }
+
+/* ── LAYER DIAGRAM ── */
+.layer-diagram { display: flex; flex-direction: column; align-items: center; gap: 0; width: 100%; max-width: 620px; }
+.layer { width: 100%; padding: 13px 18px; display: flex; align-items: center; gap: 14px; border: 1px solid; position: relative; }
+.layer:first-child { border-radius: 10px 10px 0 0; }
+.layer:last-child  { border-radius: 0 0 10px 10px; }
+.layer-icon { font-size: 1.6rem; flex-shrink: 0; }
+.layer-info { flex: 1; }
+.layer-name { font-family: 'Orbitron', sans-serif; font-size: 0.9rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 2px; }
+.layer-desc { font-size: 0.85rem; color: var(--dim); }
+.layer-tag  { font-size: 0.72rem; letter-spacing: 0.1em; padding: 4px 10px; border-radius: 4px; font-family: 'Orbitron', sans-serif; flex-shrink: 0; }
+.layer-connector { width: 2px; height: 14px; background: rgba(255,255,255,0.08); align-self: center; }
+
+.layer.lv { background: rgba(0,229,255,0.06); border-color: rgba(0,229,255,0.25); }
+.layer.lv .layer-name { color: var(--cyan); }
+.layer.lv .layer-tag  { background: rgba(0,229,255,0.1); color: var(--cyan); border: 1px solid rgba(0,229,255,0.3); }
+
+.layer.ld { background: rgba(0,255,136,0.06); border-color: rgba(0,255,136,0.25); }
+.layer.ld .layer-name { color: var(--green); }
+.layer.ld .layer-tag  { background: rgba(0,255,136,0.1); color: var(--green); border: 1px solid rgba(0,255,136,0.3); }
+
+.layer.lf { background: rgba(255,149,0,0.06); border-color: rgba(255,149,0,0.25); }
+.layer.lf .layer-name { color: var(--orange); }
+.layer.lf .layer-tag  { background: rgba(255,149,0,0.1); color: var(--orange); border: 1px solid rgba(255,149,0,0.3); }
+
+.layer.lm { background: rgba(191,0,255,0.06); border-color: rgba(191,0,255,0.25); }
+.layer.lm .layer-name { color: var(--purple); }
+.layer.lm .layer-tag  { background: rgba(191,0,255,0.1); color: var(--purple); border: 1px solid rgba(191,0,255,0.3); }
+
+.layer.lb { background: rgba(255,51,102,0.06); border-color: rgba(255,51,102,0.25); }
+.layer.lb .layer-name { color: var(--red); }
+.layer.lb .layer-tag  { background: rgba(255,51,102,0.1); color: var(--red); border: 1px solid rgba(255,51,102,0.3); }
+
+.layer.lct { background: rgba(255,230,0,0.06); border-color: rgba(255,230,0,0.25); }
+.layer.lct .layer-name { color: var(--yellow); }
+.layer.lct .layer-tag  { background: rgba(255,230,0,0.1); color: var(--yellow); border: 1px solid rgba(255,230,0,0.3); }
+
+/* ── HTTP ANIMATION ── */
+.http-flow {
+  display: flex; align-items: center; justify-content: center;
+  gap: 0; max-width: 920px; width: 100%;
+}
+.http-box {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+  padding: 20px 18px; min-width: 130px; text-align: center;
+}
+.http-box .hb-icon  { font-size: 2.4rem; }
+.http-box .hb-title { font-family: 'Orbitron', sans-serif; font-size: 0.82rem; font-weight: 700; letter-spacing: 0.08em; }
+.http-box .hb-sub   { font-size: 0.78rem; color: var(--dim); line-height: 1.4; }
+
+.http-box.client  { border-color: rgba(0,229,255,0.4);  }
+.http-box.client .hb-title  { color: var(--cyan); }
+.http-box.internet{ border-color: rgba(255,230,0,0.3);  }
+.http-box.internet .hb-title{ color: var(--yellow); }
+.http-box.server  { border-color: rgba(0,255,136,0.4);  }
+.http-box.server .hb-title  { color: var(--green); }
+.http-box.db      { border-color: rgba(255,51,102,0.4); }
+.http-box.db .hb-title      { color: var(--red); }
+
+.http-arrow {
+  display: flex; flex-direction: column; align-items: center;
+  min-width: 80px; gap: 6px;
+}
+.arr-line {
+  height: 2px; width: 70px;
+  position: relative; display: flex; align-items: center;
+}
+.arr-req { background: linear-gradient(90deg, var(--cyan), var(--green)); }
+.arr-res { background: linear-gradient(90deg, var(--green), var(--cyan)); }
+.arr-req::after { content: '►'; position: absolute; right: -4px; color: var(--green); font-size: 0.7rem; }
+.arr-res::after { content: '◄'; position: absolute; left: -4px; color: var(--cyan); font-size: 0.7rem; }
+.arr-label { font-size: 0.72rem; color: var(--dim); letter-spacing: 0.05em; text-align: center; }
+.arr-label.req { color: var(--cyan); }
+.arr-label.res { color: var(--green); }
+
+/* ── URL ANATOMY ── */
+.url-anatomy {
+  background: #07070f; border: 1px solid var(--border); border-radius: 10px;
+  padding: 18px 24px; max-width: 880px; width: 100%;
+}
+.url-display {
+  font-size: clamp(0.85rem, 1.5vw, 1.1rem); letter-spacing: 0.04em;
+  margin-bottom: 16px; line-height: 1.5;
+  background: rgba(0,229,255,0.05); border: 1px solid rgba(0,229,255,0.15);
+  border-radius: 6px; padding: 12px 16px;
+}
+.u-proto  { color: var(--orange); }
+.u-host   { color: var(--cyan); }
+.u-port   { color: var(--yellow); }
+.u-path   { color: var(--green); }
+.u-param  { color: var(--purple); }
+
+.url-parts { display: flex; gap: 10px; flex-wrap: wrap; }
+.url-part {
+  display: flex; flex-direction: column; gap: 4px;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 6px; padding: 8px 14px; flex: 1; min-width: 110px;
+}
+.up-label { font-size: 0.65rem; letter-spacing: 0.15em; color: var(--dim); text-transform: uppercase; font-family: 'Orbitron', sans-serif; }
+.up-value { font-size: 0.9rem; }
+.up-value.proto  { color: var(--orange); }
+.up-value.host   { color: var(--cyan); }
+.up-value.port   { color: var(--yellow); }
+.up-value.path   { color: var(--green); }
+.up-value.param  { color: var(--purple); }
+
+/* ── HTTP VERBS TABLE ── */
+.verbs-table { width: 100%; max-width: 900px; border-collapse: collapse; }
+.verbs-table th {
+  font-family: 'Orbitron', sans-serif; font-size: 0.72rem; letter-spacing: 0.15em;
+  text-transform: uppercase; color: var(--dim); text-align: left;
+  padding: 10px 16px; border-bottom: 1px solid var(--border);
+}
+.verbs-table td { padding: 12px 16px; border-bottom: 1px solid rgba(30,30,53,0.6); font-size: 0.95rem; }
+.verbs-table tr:hover td { background: rgba(0,229,255,0.03); }
+.verbs-table tr:last-child td { border-bottom: none; }
+.verb-pill {
+  display: inline-block; font-family: 'Orbitron', sans-serif;
+  font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em;
+  padding: 4px 12px; border-radius: 4px; min-width: 72px; text-align: center;
+}
+.verb-pill.get    { background: rgba(0,255,136,0.12);  color: var(--green);  border: 1px solid rgba(0,255,136,0.35); }
+.verb-pill.post   { background: rgba(0,229,255,0.12);  color: var(--cyan);   border: 1px solid rgba(0,229,255,0.35); }
+.verb-pill.put    { background: rgba(255,149,0,0.12);  color: var(--orange); border: 1px solid rgba(255,149,0,0.35); }
+.verb-pill.delete { background: rgba(255,51,102,0.12); color: var(--red);    border: 1px solid rgba(255,51,102,0.35); }
+
+/* ── STATUS CODES ── */
+.status-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; max-width: 860px; width: 100%; }
+.status-item {
+  background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+  padding: 14px 16px; display: flex; align-items: flex-start; gap: 14px;
+}
+.status-code {
+  font-family: 'Orbitron', sans-serif; font-size: 1.3rem; font-weight: 900;
+  min-width: 54px; line-height: 1;
+}
+.status-info .si-name { font-size: 0.8rem; letter-spacing: 0.1em; font-family: 'Orbitron', sans-serif; margin-bottom: 4px; }
+.status-info .si-desc { font-size: 0.82rem; color: var(--dim); line-height: 1.45; }
+.s2xx .status-code { color: var(--green); }
+.s2xx { border-left: 3px solid var(--green); }
+.s2xx .si-name { color: var(--green); }
+.s4xx .status-code { color: var(--yellow); }
+.s4xx { border-left: 3px solid var(--yellow); }
+.s4xx .si-name { color: var(--yellow); }
+.s5xx .status-code { color: var(--red); }
+.s5xx { border-left: 3px solid var(--red); }
+.s5xx .si-name { color: var(--red); }
+
+/* ── RICH MATURITY ── */
+.maturity-levels {
+  display: flex; gap: 12px; max-width: 920px; width: 100%; align-items: stretch;
+}
+.mat-level {
+  flex: 1; background: var(--card); border: 1px solid var(--border);
+  border-radius: 10px; padding: 18px 14px; text-align: center;
+  display: flex; flex-direction: column; gap: 8px; align-items: center;
+}
+.mat-level.active {
+  border-color: rgba(0,255,136,0.5);
+  box-shadow: 0 0 18px rgba(0,255,136,0.1);
+}
+.mat-num {
+  font-family: 'Orbitron', sans-serif; font-size: 1.6rem; font-weight: 900;
+}
+.mat-name { font-family: 'Orbitron', sans-serif; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.08em; }
+.mat-desc { font-size: 0.82rem; color: var(--dim); line-height: 1.45; }
+.mat-level.l0 .mat-num { color: var(--red); }
+.mat-level.l1 .mat-num { color: var(--orange); }
+.mat-level.l1 .mat-name { color: var(--orange); }
+.mat-level.l2 .mat-num { color: var(--yellow); }
+.mat-level.l2 .mat-name { color: var(--yellow); }
+.mat-level.l3 .mat-num { color: var(--green); }
+.mat-level.l3 .mat-name { color: var(--green); }
+.mat-level.active .mat-name { color: var(--green); }
+
+/* ── JSON ── */
+.json-box {
+  background: #07070f; border: 1px solid var(--border); border-radius: 10px;
+  padding: 20px 26px; font-size: 1rem; line-height: 1.9;
+  color: #c8c8e0; max-width: 860px; width: 100%;
+}
+.json-box .bar { display: flex; gap: 6px; margin-bottom: 14px; }
+.json-box .bar span { width: 11px; height: 11px; border-radius: 50%; }
+.json-box .bar .r { background: #ff5f57; }
+.json-box .bar .y { background: #febc2e; }
+.json-box .bar .g { background: #28c840; }
+.j-key  { color: var(--cyan); }
+.j-str  { color: var(--green); }
+.j-num  { color: var(--yellow); }
+.j-bool { color: var(--orange); }
+.j-null { color: var(--dim); }
+.j-cm   { color: #444465; font-style: italic; }
+
+/* ── DDL ── */
+.code-block {
+  background: #07070f; border: 1px solid var(--border); border-radius: 10px;
+  padding: 18px 24px; font-size: clamp(0.82rem, 1.2vw, 0.98rem); line-height: 1.85;
+  color: #c8c8e0; width: 100%; max-width: 860px; text-align: left;
+}
+.code-block .bar { display: flex; gap: 6px; margin-bottom: 12px; }
+.code-block .bar span { width: 11px; height: 11px; border-radius: 50%; }
+.code-block .bar .r { background: #ff5f57; }
+.code-block .bar .y { background: #febc2e; }
+.code-block .bar .g { background: #28c840; }
+.kw  { color: var(--purple); }
+.cls { color: var(--orange); }
+.fn  { color: var(--cyan); }
+.str { color: var(--green); }
+.num { color: var(--yellow); }
+.cm  { color: #444465; font-style: italic; }
+
+/* ── DB TABLE ── */
+.db-table { background: var(--card); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; width: 100%; max-width: 820px; border-collapse: collapse; }
+.db-table th { background: rgba(0,229,255,0.08); color: var(--cyan); font-family: 'Orbitron', sans-serif; font-size: 0.82rem; letter-spacing: 0.12em; text-transform: uppercase; padding: 13px 18px; border-bottom: 1px solid var(--border); text-align: left; }
+.db-table td { padding: 11px 18px; font-size: 0.95rem; border-bottom: 1px solid rgba(30,30,53,0.5); color: var(--text); }
+.db-table tr:last-child td { border-bottom: none; }
+.db-table td .pk   { color: var(--yellow); font-weight: bold; }
+.db-table td .type { color: var(--purple); }
+.db-table td .nn   { color: var(--red); font-size: 0.88rem; }
+
+/* ── ENDPOINT TABLE ── */
+.ep-table { width: 100%; max-width: 900px; border-collapse: collapse; }
+.ep-table th { font-family: 'Orbitron', sans-serif; font-size: 0.7rem; letter-spacing: 0.15em; color: var(--dim); text-align: left; padding: 10px 16px; border-bottom: 1px solid var(--border); }
+.ep-table td { padding: 11px 16px; border-bottom: 1px solid rgba(30,30,53,0.6); font-size: 0.92rem; }
+.ep-table tr:hover td { background: rgba(0,229,255,0.03); }
+.ep-table tr:last-child td { border-bottom: none; }
+.sc { font-size: 0.82rem; }
+.sc.ok  { color: var(--green); }
+.sc.cr  { color: var(--cyan); }
+.sc.nc  { color: var(--orange); }
+.sc.nf  { color: var(--red); }
+
+/* ── STEPS ── */
+.steps { display: flex; align-items: center; gap: 0; max-width: 900px; width: 100%; }
+.step { flex: 1; text-align: center; padding: 18px 10px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; }
+.step-num { font-family: 'Orbitron', sans-serif; font-size: 1.7rem; font-weight: 900; color: var(--green); display: block; margin-bottom: 6px; text-shadow: 0 0 20px var(--green); }
+.step-label { font-size: 0.92rem; color: var(--dim); line-height: 1.5; }
+.step-arrow { color: var(--dim); font-size: 1.3rem; flex-shrink: 0; padding: 0 6px; }
+
+/* ── COVER DECORATIONS ── */
+.cover-decorations { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.corner { position: absolute; width: 100px; height: 100px; border-color: var(--green); border-style: solid; opacity: 0.18; }
+.corner.tl { top: 60px;  left: 18px;  border-width: 2px 0 0 2px; }
+.corner.tr { top: 60px;  right: 18px; border-width: 2px 2px 0 0; }
+.corner.bl { bottom: 18px; left: 18px;  border-width: 0 0 2px 2px; }
+.corner.br { bottom: 18px; right: 18px; border-width: 0 2px 2px 0; }
+.floating-icons { position: absolute; font-size: 5rem; opacity: 0.04; user-select: none; }
+.fi1 { top: 15%; left: 5%;   animation: float1 6s ease-in-out infinite; }
+.fi2 { top: 55%; right: 5%;  animation: float1 8s ease-in-out infinite reverse; }
+.fi3 { bottom: 14%; left: 12%; animation: float1 7s ease-in-out infinite 2s; }
+@keyframes float1 { 0%,100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-18px) rotate(5deg); } }
+
+.blink { animation: blink 1s step-end infinite; color: var(--green); }
+@keyframes blink { 50% { opacity: 0; } }
+.pulse-glow { animation: pulseGlow 2.5s ease-in-out infinite; }
+@keyframes pulseGlow { 0%,100% { text-shadow: 0 0 20px currentColor; } 50% { text-shadow: 0 0 60px currentColor, 0 0 100px currentColor; } }
+
+/* ── BOTTOM NAV ── */
+#bottom-nav {
+  position: fixed; bottom: 0; left: 0; right: 0; height: 52px;
+  background: rgba(10,10,15,0.97); border-top: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 20px; z-index: 50; gap: 16px;
+}
+.nav-btn {
+  background: var(--card); border: 1px solid var(--border); color: var(--text);
+  font-family: 'Share Tech Mono', monospace; font-size: 0.85rem;
+  padding: 9px 22px; border-radius: 6px; cursor: pointer; transition: all 0.2s;
+  display: flex; align-items: center; gap: 8px; user-select: none;
+}
+.nav-btn:hover { background: rgba(0,255,136,0.1); border-color: var(--green); color: var(--green); }
+.nav-btn.next  { background: rgba(0,255,136,0.08); border-color: rgba(0,255,136,0.4); color: var(--green); }
+.nav-btn.next:hover { background: rgba(0,255,136,0.2); }
+#dots { display: flex; gap: 7px; align-items: center; flex: 1; justify-content: center; flex-wrap: wrap; }
+.dot { width: 7px; height: 7px; border-radius: 50%; background: var(--border); border: 1px solid var(--dim); cursor: pointer; transition: all 0.25s; }
+.dot.active { background: var(--green); box-shadow: 0 0 8px var(--green); transform: scale(1.45); }
+
+/* ── API ANALOGY ── */
+.analogy-row { display: flex; gap: 16px; max-width: 940px; width: 100%; }
+.analogy-col { flex: 1; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 18px 20px; }
+.analogy-col .a-title { font-family: 'Orbitron', sans-serif; font-size: 0.82rem; font-weight: 700; letter-spacing: 0.08em; margin-bottom: 12px; }
+.analogy-col .a-list  { list-style: none; font-size: 0.92rem; color: var(--dim); line-height: 1.9; }
+.analogy-col .a-list li::before { content: '▸ '; color: var(--cyan); }
+.analogy-sep { display: flex; align-items: center; font-size: 1.6rem; color: var(--border); flex-shrink: 0; padding-top: 30px; }
+
+/* ── TWO COL ── */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; width: 100%; max-width: 960px; align-items: start; }
+
+/* ── SPRING ARCH ── */
+.spring-layers { display: flex; flex-direction: column; gap: 0; width: 100%; max-width: 640px; }
+</style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+
+<div id="header">
+  <div class="logo">JAVA<span style="color:var(--cyan)">.</span>API &nbsp;<span style="opacity:0.4">|</span>&nbsp; <span style="color:var(--yellow)">🎮 GAMES REST</span></div>
+  <div class="slide-counter">SLIDE <b id="cur">01</b> / <b id="tot">20</b></div>
+  <div style="font-size:0.72rem;color:var(--dim)">← → para navegar</div>
+</div>
+
+<div id="progress-bar"></div>
+
+<div id="slides">
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- S0 — CAPA -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="slide active">
+  <div class="cover-decorations">
+    <div class="corner tl"></div><div class="corner tr"></div>
+    <div class="corner bl"></div><div class="corner br"></div>
+    <div class="floating-icons fi1">🕹️</div>
+    <div class="floating-icons fi2">🌐</div>
+    <div class="floating-icons fi3">🎮</div>
+  </div>
+  <div class="section-tag">Análise e Desenvolvimento de Sistemas • FIAP • 1TDS</div>
+  <h1 class="pulse-glow"><span class="hl-green">GAMES</span> REST API<br><span class="hl-cyan" style="font-size:60%">COM SPRING BOOT</span></h1>
+  <p class="subtitle">Da live anterior (JDBC + DAO) para a próxima geração:<br>construindo uma <span style="color:var(--yellow)">API REST de Games</span> com Spring Boot + Oracle.</p>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;">
+    <span class="badge cyan">REST API</span>
+    <span class="badge green">Spring Boot</span>
+    <span class="badge purple">Spring Data JPA</span>
+    <span class="badge yellow">Oracle DB</span>
+    <span class="badge orange">HTTP</span>
+    <span class="badge red">JSON</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:28px;margin-top:4px;flex-wrap:wrap;justify-content:center;">
+    <div style="font-size:1rem;color:var(--dim)">$ <span class="blink">_</span></div>
+    <div style="font-size:0.9rem;color:var(--dim);display:flex;align-items:center;gap:10px">
+      <span style="color:var(--border)">|</span>
+      <span>📅</span>
+      <span id="live-date" style="color:var(--cyan);letter-spacing:0.06em"></span>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- S1 — CONEXÃO COM A LIVE ANTERIOR -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="section-tag">contexto</div>
+  <h2>🔁 O que fizemos na Live Anterior</h2>
+  <div class="two-col" style="max-width:940px">
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div class="card orange">
+        <span class="card-icon">🏭</span>
+        <div class="card-title">Live 01 — JDBC + DAO</div>
+        <p class="card-text">Construímos um sistema de <strong style="color:var(--yellow)">gerenciamento de games</strong> via terminal com JDBC puro, PreparedStatement, padrão DAO e ConnectionFactory.</p>
+      </div>
+      <div class="card cyan" style="background:rgba(0,229,255,0.04)">
+        <span class="card-icon">📦</span>
+        <div class="card-title" style="color:var(--cyan)">Estrutura anterior</div>
+        <p class="card-text" style="line-height:2">
+          <span style="color:var(--orange)">factory/</span> → ConnectionFactory<br>
+          <span style="color:var(--purple)">model/</span>   → Game.java<br>
+          <span style="color:var(--green)">dao/</span>      → GameDao.java (PreparedStatement)<br>
+          <span style="color:var(--cyan)">view/</span>      → GameView.java (Scanner)<br>
+          <span style="color:var(--dim)">Tabela:</span>     <span style="color:var(--yellow)">tb_game</span>
+        </p>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div class="card green">
+        <span class="card-icon">🚀</span>
+        <div class="card-title">Live 02 — REST API</div>
+        <p class="card-text">Agora vamos <strong style="color:var(--green)">expor</strong> os mesmos dados de games através de uma API REST com Spring Boot — acessível por qualquer cliente HTTP (navegador, app mobile, Insomnia...).</p>
+      </div>
+      <div class="alert info" style="font-size:0.95rem">
+        🎮 Mesma tabela <strong>tb_game</strong>, mesmos dados — mas agora qualquer aplicação no mundo pode acessar via URL!
+      </div>
+      <div class="alert warn" style="font-size:0.95rem">
+        ⚡ Esta é a base do que toda vaga <strong>Back-end Java</strong> exige no mercado hoje.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- S2 — O QUE É UMA API -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="section-tag">conceito fundamental</div>
+  <h2>🤔 O Que É Uma API?</h2>
+  <div class="two-col" style="max-width:940px">
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div class="card purple">
+        <span class="card-icon">🔌</span>
+        <div class="card-title">API = Application Programming Interface</div>
+        <p class="card-text">É um <strong style="color:var(--purple)">contrato de comunicação</strong> entre sistemas. Define como uma aplicação pode pedir e receber dados de outra — sem precisar saber como ela funciona por dentro.</p>
+      </div>
+      <div class="card yellow">
+        <span class="card-icon">🍽️</span>
+        <div class="card-title">A Analogia do Restaurante</div>
+        <p class="card-text">
+          <strong style="color:var(--yellow)">Você</strong> = Frontend / App Mobile<br>
+          <strong style="color:var(--yellow)">Garçom</strong> = API REST<br>
+          <strong style="color:var(--yellow)">Cozinha</strong> = Backend / Banco de Dados<br><br>
+          Você pede ao garçom. O garçom leva à cozinha e traz de volta. Você não precisa entrar na cozinha!
+        </p>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div class="card green">
+        <span class="card-icon">🌍</span>
+        <div class="card-title">APIs no Mundo Real</div>
+        <p class="card-text" style="line-height:2">
+          💳 Pagamento com cartão → API de pagamento<br>
+          📍 Google Maps em apps → API do Maps<br>
+          🔑 "Entrar com Google" → API OAuth<br>
+          🎮 Steam verifica sua biblioteca → API da Steam<br>
+          <span style="color:var(--dim)">→ Tudo que conecta sistemas é uma API!</span>
+        </p>
+      </div>
+      <div class="alert info">
+        💡 A nossa API de Games vai permitir que qualquer app (web, mobile, outro servidor) <strong>liste, cadastre, atualize e delete games</strong> via HTTP.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- S3 — CLIENTE-SERVIDOR -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="section-tag">arquitetura</div>
+  <h2>🏗️ Arquitetura Cliente-Servidor</h2>
+
+  <div class="http-flow">
+    <div class="http-box client">
+      <div class="hb-icon">💻</div>
+      <div class="hb-title">CLIENTE</div>
+      <div class="hb-sub">App Web<br>App Mobile<br>Insomnia<br>Outro servidor</div>
+    </div>
+    <div class="http-arrow">
+      <div class="arr-label req">REQUEST →</div>
+      <div class="arr-line arr-req"></div>
+      <div class="arr-line arr-res" style="margin-top:4px"></div>
+      <div class="arr-label res">← RESPONSE</div>
+    </div>
+    <div class="http-box internet">
+      <div class="hb-icon">🌐</div>
+      <div class="hb-title">INTERNET</div>
+      <div class="hb-sub">Protocolo<br>HTTP</div>
+    </div>
+    <div class="http-arrow">
+      <div class="arr-label req">→</div>
+      <div class="arr-line arr-req"></div>
+      <div class="arr-line arr-res" style="margin-top:4px"></div>
+      <div class="arr-label res">←</div>
+    </div>
+    <div class="http-box server">
+      <div class="hb-icon">🌱</div>
+      <div class="hb-title">BACKEND</div>
+      <div class="hb-sub">Spring Boot<br>Tomcat :8080<br>Controllers<br>Services</div>
+    </div>
+    <div class="http-arrow">
+      <div class="arr-label req">SQL →</div>
+      <div class="arr-line arr-req"></div>
+      <div class="arr-line arr-res" style="margin-top:4px"></div>
+      <div class="arr-label res">← dados</div>
+    </div>
+    <div class="http-box db">
+      <div class="hb-icon">🏛️</div>
+      <div class="hb-title">ORACLE DB</div>
+      <div class="hb-sub">tb_game<br>FIAP Server<br>:1521</div>
+    </div>
+  </div>
+
+  <div class="cards-grid cols-3" style="max-width:860px">
+    <div class="card cyan">
+      <div class="card-title">CLIENTE (Frontend)</div>
+      <p class="card-text">Faz <strong style="color:var(--cyan)">requisições</strong> HTTP para consumir recursos. Não sabe como o backend funciona — só conhece a URL e o formato do JSON.</p>
+    </div>
+    <div class="card green">
+      <div class="card-title">SERVIDOR (Backend)</div>
+      <p class="card-text">Recebe requisições, processa a lógica de negócio, acessa o banco e devolve uma <strong style="color:var(--green)">resposta</strong> em JSON com um status code.</p>
+    </div>
+    <div class="card yellow">
+      <div class="card-title">SEPARAÇÃO DE RESPONSABILIDADES</div>
+      <p class="card-text">Frontend e backend evoluem <strong style="color:var(--yellow)">independentemente</strong>. Um app mobile e um web podem consumir a mesma API!</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- S4 — PROTOCOLO HTTP -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="section-tag">protocolo de comunicação</div>
+  <h2>🌐 O Protocolo HTTP</h2>
+  <div class="two-col" style="max-width:940px">
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div class="card cyan">
+        <span class="card-icon">📡</span>
+        <div class="card-title">HTTP — HyperText Transfer Protocol</div>
+        <p class="card-text">Define <strong style="color:var(--cyan)">como</strong> as mensagens são trocadas entre cliente e servidor na web. É a linguagem universal da internet — toda requisição e resposta seguem esse protocolo.</p>
+      </div>
+      <div class="card green">
+        <span class="card-icon">🔄</span>
+        <div class="card-title">Ciclo Request / Response</div>
+        <p class="card-text">
+          1️⃣ <strong style="color:var(--green)">Request</strong>: cliente envia verbo + URL + body (se necessário)<br>
+          2️⃣ Servidor processa e acessa o banco<br>
+          3️⃣ <strong style="color:var(--green)">Response</strong>: servidor responde com status code + body JSON
+        </p>
+      </div>
+      <div class="alert info" style="font-size:0.9rem">
+        💡 Quando você abre <code>localhost:8080/api/games</code> no navegador, você está fazendo uma requisição HTTP GET para o seu backend Spring Boot!
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <p style="font-size:0.9rem;color:var(--dim);text-align:center;letter-spacing:0.1em">ANATOMIA DE UMA URL REST</p>
+      <div class="url-anatomy">
+        <div class="url-display">
+          <span class="u-proto">https://</span><span class="u-host">api.fiap.com.br</span><span class="u-port">:8080</span><span class="u-path">/api/games/42</span>
+        </div>
+        <div class="url-parts">
+          <div class="url-part">
+            <span class="up-label">Protocolo</span>
+            <span class="up-value proto">https://</span>
+          </div>
+          <div class="url-part">
+            <span class="up-label">Host / Domínio</span>
+            <span class="up-value host">api.fiap.com.br</span>
+          </div>
+          <div class="url-part">
+            <span class="up-label">Porta</span>
+            <span class="up-value port">:8080</span>
+          </div>
+          <div class="url-part">
+            <span class="up-label">Path / Recurso</span>
+            <span class="up-value path">/api/games/42</span>
+          </div>
+        </div>
+      </div>
+      <div class="alert warn" style="font-size:0.9rem">
+        🎮 Em dev: <code style="color:var(--green)">http://localhost:8080/api/games</code><br>
+        Em produção: troca localhost pelo IP ou domínio real.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- S5 — VERBOS HTTP -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="section-tag">http methods</div>
+  <h2>⚡ Verbos HTTP — CRUD do Backend</h2>
+  <table class="verbs-table">
+    <thead>
+      <tr>
+        <th>VERBO</th>
+        <th>OPERAÇÃO CRUD</th>
+        <th>EXEMPLO — GAMES API</th>
+        <th>O QUE FAZ</th>
+        <th>BODY?</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="verb-pill get">GET</span></td>
+        <td style="color:var(--cyan)">READ</td>
+        <td><code style="color:var(--green)">GET /api/games</code></td>
+        <td style="color:var(--dim)">Busca/lista recursos — só lê, nunca altera</td>
+        <td><span style="color:var(--red)">Não</span></td>
+      </tr>
+      <tr>
+        <td><span class="verb-pill get">GET</span></td>
+        <td style="color:var(--cyan)">READ (por ID)</td>
+        <td><code style="color:var(--green)">GET /api/games/42</code></td>
+        <td style="color:var(--dim)">Busca um game específico pelo código</td>
+        <td><span style="color:var(--red)">Não</span></td>
+      </tr>
+      <tr>
+        <td><span class="verb-pill post">POST</span></td>
+        <td style="color:var(--cyan)">CREATE</td>
+        <td><code style="color:var(--cyan)">POST /api/games</code></td>
+        <td style="color:var(--dim)">Cadastra um novo game — envia JSON no body</td>
+        <td><span style="color:var(--green)">Sim (JSON)</span></td>
+      </tr>
+      <tr>
+        <td><span class="verb-pill put">PUT</span></td>
+        <td style="color:var(--cyan)">UPDATE</td>
+        <td><code style="color:var(--orange)">PUT /api/games/42</code></td>
+        <td style="color:var(--dim)">Atualiza todos os dados do game 42</td>
+        <td><span style="color:var(--green)">Sim (JSON)</span></td>
+      </tr>
+      <tr>
+        <td><span class="verb-pill delete">DELETE</span></td>
+        <td style="color:var(--cyan)">DELETE</td>
+        <td><code style="color:var(--red)">DELETE /api/games/42</code></td>
+        <td style="color:var(--dim)">Remove o game 42 do banco de dados</td>
+        <td><span style="color:var(--red)">Não</span></td>
+      </tr>
+    </tbody>
+  </table>
+  <div class="alert info" style="max-width:900px">
+    🎮 Note que a URL <code>/api/games/42</code> usa o mesmo recurso — quem define a <strong>operação</strong> é o <strong>verbo HTTP</strong>, não a URL!
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- S6 — HTTP STATUS CODES -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="section-tag">respostas do servidor</div>
+  <h2>📊 HTTP Status Codes — O Servidor Fala</h2>
+  <div class="status-grid" style="max-width:920px">
+    <div class="status-item s2xx">
+      <div class="status-code">200</div>
+      <div class="status-info">
+        <div class="si-name">OK</div>
+        <div class="si-desc">Requisição bem-sucedida. Usado em GET e PUT.</div>
+      </div>
+    </div>
+    <div class="status-item s2xx">
+      <div class="status-code">201</div>
+      <div class="status-info">
+        <div class="si-name">CREATED</div>
+        <div class="si-desc">Recurso criado com sucesso. Retornado pelo POST.</div>
+      </div>
+    </div>
+    <div class="status-item s2xx">
+      <div class="status-code">204</div>
+      <div class="status-info">
+        <div class="si-name">NO CONTENT</div>
+        <div class="si-desc">Operação ok, sem corpo na resposta. Usado no DELETE.</div>
+      </div>
+    </div>
+    <div class="status-item s4xx">
+      <div class="status-code">400</div>
+      <div class="status-info">
+        <div class="si-name">BAD REQUEST</div>
+        <div class="si-desc">Erro na requisição do cliente (dados inválidos, JSON malformado).</div>
+      </div>
+    </div>
+    <div class="status-item s4xx">
+      <div class="status-code">404</div>
+      <div class="status-info">
+        <div class="si-name">NOT FOUND</div>
+        <div class="si-desc">Game não encontrado no banco. ID inexistente.</div>
+      </div>
+    </div>
+    <div class="status-item s5xx">
+      <div class="status-code">500</div>
+      <div class="status-info">
+        <div class="si-name">SERVER ERROR</div>
+        <div class="si-desc">Erro interno no servidor. Problema no backend ou banco.</div>
+      </div>
+    </div>
+  </div>
+  <div class="cards-grid cols-3" style="max-width:900px">
+    <div class="card green" style="padding:12px 16px">
+      <div class="card-title">2xx = ✅ Sucesso</div>
+      <p class="card-text">Tudo correu bem. O servidor processou e respondeu.</p>
+    </div>
+    <div class="card yellow" style="padding:12px 16px">
+      <div class="card-title">4xx = ⚠️ Erro do cliente</div>
+      <p class="card-text">Problema na requisição enviada. Corrija e tente novamente.</p>
+    </div>
+    <div class="card red" style="padding:12px 16px">
+      <div class="card-title">5xx = 💥 Erro do servidor</div>
+      <p class="card-text">O backend explodiu. Problema a investigar no log do Spring.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- S7 — JSON -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="section-tag">formato de dados</div>
+  <h2>📦 JSON — A Linguagem da API</h2>
+  <div class="two-col" style="max-width:940px">
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div class="card green">
+        <span class="card-icon">📝</span>
+        <div class="card-title">JSON — JavaScript Object Notation</div>
+        <p class="card-text">Formato padrão para troca de dados em APIs REST. Estrutura de <strong style="color:var(--green)">chave–valor</strong>, leve e legível por humanos e máquinas.</p>
+      </div>
+      <div class="card cyan">
+        <span class="card-icon">🔀</span>
+        <div class="card-title">Java ↔ JSON (Jackson)</div>
+        <p class="card-text">
+          O Spring Boot usa a biblioteca <strong style="color:var(--cyan)">Jackson</strong> para converter automaticamente:<br><br>
+          📦 Objeto Java <code>Game</code> → JSON (resposta)<br>
+          📥 JSON do body → Objeto Java <code>Game</code> (requisição)
+        </p>
+      </div>
+      <div class="alert info" style="font-size:0.9rem">
+        🎮 Você escreve Java. O Spring converte para JSON <strong>automaticamente</strong>. Sem código extra!
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <p style="font-size:0.85rem;color:var(--dim);letter-spacing:0.1em;text-align:center">EXEMPLO — GAME COMO JSON</p>
+      <div class="json-box">
+        <div class="bar"><span class="r"></span><span class="y"></span><span class="g"></span></div>
+{<br>
+&nbsp;&nbsp;<span class="j-key">"cdGame"</span>: <span class="j-num">42</span>,<br>
+&nbsp;&nbsp;<span class="j-key">"nmGame"</span>: <span class="j-str">"The Legend of Zelda: TOTK"</span>,<br>
+&nbsp;&nbsp;<span class="j-key">"nrNota"</span>: <span class="j-num">9.8</span>,<br>
+&nbsp;&nbsp;<span class="j-key">"nrAno"</span>: <span class="j-num">2023</span>,<br>
+&nbsp;&nbsp;<span class="j-key">"dtCompra"</span>: <span class="j-str">"2023-05-12"</span>,<br>
+&nbsp;&nbsp;<span class="j-key">"stFinalizado"</span>: <span class="j-bool">true</span><br>
+}
+      </div>
+      <div class="cards-grid cols-2" style="max-width:none">
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px 14px">
+          <div style="font-size:0.72rem;color:var(--dim);letter-spacing:0.1em;font-family:'Orbitron',sans-serif;margin-bottom:6px">TIPOS JSON</div>
+          <div style="font-size:0.88rem;line-height:1.9">
+            <span class="j-str">"texto"</span> → String<br>
+            <span class="j-num">42</span> / <span class="j-num">9.8</span> → número<br>
+            <span class="j-bool">true</span> / <span class="j-bool">false</span> → boolean<br>
+            <span class="j-null">null</span> → nulo
+          </div>
+        </div>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px 14px">
+          <div style="font-size:0.72rem;color:var(--dim);letter-spacing:0.1em;font-family:'Orbitron',sans-serif;margin-bottom:6px">TABELA → JSON</div>
+          <div style="font-size:0.88rem;line-height:1.9">
+            <span style="color:var(--yellow)">cd_game</span> → <span class="j-key">"cdGame"</span><br>
+            <span style="color:var(--yellow)">nm_game</span> → <span class="j-key">"nmGame"</span><br>
+            <span style="color:var(--yellow)">nr_nota</span> → <span class="j-key">"nrNota"</span><br>
+            <span style="color:var(--dim)">camelCase por padrão</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- S8 — REST E RICHARDSON -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="section-tag">arquitetura rest</div>
+  <h2>🏛️ REST e Maturidade de Richardson</h2>
+  <div class="maturity-levels">
+    <div class="mat-level l0">
+      <div class="mat-num">0</div>
+      <div class="mat-name">Pântano de XML</div>
+      <div class="mat-desc">1 endpoint para tudo. Verbo errado. XML como formato. Não é REST.</div>
+      <span class="badge red" style="font-size:0.65rem">❌ Evitar</span>
+    </div>
+    <div class="mat-level l1">
+      <div class="mat-num">1</div>
+      <div class="mat-name">Recursos</div>
+      <div class="mat-desc">URLs separadas por recurso: <code>/games</code>, <code>/users</code>. Ainda sem verbos corretos.</div>
+      <span class="badge orange" style="font-size:0.65rem">⚠️ Básico</span>
+    </div>
+    <div class="mat-level l2 active">
+      <div class="mat-num">2</div>
+      <div class="mat-name">Verbos HTTP ★</div>
+      <div class="mat-desc">GET/POST/PUT/DELETE corretos + status codes corretos. Isso é o mínimo para ser RESTful!</div>
+      <span class="badge green" style="font-size:0.65rem">✅ Nossa meta</span>
+    </div>
+    <div class="mat-level l3">
+      <div class="mat-num">3</div>
+      <div class="mat-name">HATEOAS</div>
+      <div class="mat-desc">Resposta inclui links de navegação entre recursos. API "autodescoberta".</div>
+      <span class="badge cyan" style="font-size:0.65rem">🚀 Avançado</span>
+    </div>
+  </div>
+  <div class="alert success" style="max-width:900px">
+    🎯 Implementar o <strong>Nível 2</strong> = sua API é considerada <strong>RESTful</strong>. É exatamente o que vamos construir com Spring Boot hoje!
+  </div>
+  <div class="alert info" style="max-width:900px">
+    💡 <strong>Roy Fielding</strong> (2000) e <strong>Leonard Richardson</strong> (2008) definiram esses padrões. Todo back-end Java do mercado segue o Nível 2 no mínimo.
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- S9 — OBJETIVO / ROADMAP -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="section-tag">objetivo de hoje</div>
+  <h2>🎯 O Que Vamos Construir</h2>
+  <div class="two-col" style="max-width:940px">
+    <div style="display:flex;flex-direction:column;gap:0">
+      <p style="font-size:0.85rem;color:var(--dim);text-align:center;letter-spacing:0.1em;margin-bottom:8px">🗺️ ROTEIRO DA LIVE</p>
+      <div class="layer-diagram" style="max-width:100%">
+        <div class="layer lct">
+          <span class="layer-icon">🌐</span>
+          <div class="layer-info">
+            <div class="layer-name">1. Spring Initializr</div>
+            <div class="layer-desc">Setup do projeto Maven + dependências</div>
+          </div>
+          <span class="layer-tag">pom.xml</span>
+        </div>
+        <div class="layer-connector"></div>
+        <div class="layer lb">
+          <span class="layer-icon">🏛️</span>
+          <div class="layer-info">
+            <div class="layer-name">2. DDL Oracle</div>
+            <div class="layer-desc">tb_game (mesma tabela!) + application.properties</div>
+          </div>
+          <span class="layer-tag">SQL</span>
+        </div>
+        <div class="layer-connector"></div>
+        <div class="layer lm">
+          <span class="layer-icon">📦</span>
+          <div class="layer-info">
+            <div class="layer-name">3. Entity JPA — Game</div>
+            <div class="layer-desc">@Entity, @Table, @Id, @SequenceGenerator</div>
+          </div>
+          <span class="layer-tag">model</span>
+        </div>
+        <div class="layer-connector"></div>
+        <div class="layer ld">
+          <span class="layer-icon">🗃️</span>
+          <div class="layer-info">
+            <div class="layer-name">4. Repository JPA</div>
+            <div class="layer-desc">GameRepository extends JpaRepository — CRUD grátis!</div>
+          </div>
+          <span class="layer-tag">repository</span>
+        </div>
+        <div class="layer-connector"></div>
+        <div class="layer lf">
+          <span class="layer-icon">⚙️</span>
+          <div class="layer-info">
+            <div class="layer-name">5. Service</div>
+            <div class="layer-desc">GameService — lógica de negócio + Optional</div>
+          </div>
+          <span class="layer-tag">service</span>
+        </div>
+        <div class="layer-connector"></div>
+        <div class="layer lv" style="border:2px solid rgba(0,229,255,0.5)">
+          <span class="layer-icon">🌐</span>
+          <div class="layer-info">
+            <div class="layer-name">6. Controller REST</div>
+            <div class="layer-desc">GameController — GET / POST / PUT / DELETE</div>
+          </div>
+          <span class="layer-tag" style="font-size:0.72rem">controller ★</span>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div class="card cyan">
+        <span class="card-icon">🔄</span>
+        <div class="card-title">Live 01 vs Live 02</div>
+        <p class="card-text" style="line-height:2">
+          <span style="color:var(--orange)">Antes</span>: View (Scanner) → DAO (PreparedStatement) → Oracle<br>
+          <span style="color:var(--green)">Agora</span>: HTTP Client → Controller → Service → Repository (JPA) → Oracle<br><br>
+          A <strong style="color:var(--yellow)">tabela tb_game é a mesma</strong> — o acesso mudou completamente!
+        </p>
+      </div>
+      <div class="card purple">
+        <span class="card-icon">⚡</span>
+        <div class="card-title">O Que Ganhamos</div>
+        <p class="card-text" style="line-height:1.8">
+          ✅ Sem código SQL manual (JPA faz tudo)<br>
+          ✅ Qualquer cliente HTTP pode acessar<br>
+          ✅ Configuração automática (Spring Boot)<br>
+          ✅ Jackson converte Java ↔ JSON<br>
+          ✅ Tomcat embutido (sem deploy manual)
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- S10 — DDL BANCO -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="section-tag">banco de dados</div>
+  <h2>🏛️ Tabela tb_game — Mesma de Antes!</h2>
+  <table class="db-table" style="max-width:860px">
+    <thead>
+      <tr><th>Coluna</th><th>Tipo Oracle</th><th>Restrição</th><th>Campo Java (@Column)</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><span class="pk">🔑 cd_game</span></td><td><span class="type">NUMBER(5)</span></td><td><span class="nn">PK — seq_game</span></td><td><code>Long cdGame</code> → @Id @SequenceGenerator</td></tr>
+      <tr><td>nm_game</td><td><span class="type">VARCHAR2(100)</span></td><td><span class="nn">NOT NULL</span></td><td><code>String nmGame</code></td></tr>
+      <tr><td>nr_nota</td><td><span class="type">NUMBER(3,1)</span></td><td>—</td><td><code>double nrNota</code></td></tr>
+      <tr><td>nr_ano</td><td><span class="type">NUMBER(4)</span></td><td>—</td><td><code>int nrAno</code></td></tr>
+      <tr><td>dt_compra</td><td><span class="type">DATE</span></td><td>—</td><td><code>LocalDate dtCompra</code> → @Column</td></tr>
+      <tr><td>st_finalizado</td><td><span class="type">NUMBER(1)</span></td><td>DEFAULT 0</td><td><code>boolean stFinalizado</code></td></tr>
+    </tbody>
+  </table>
+  <div class="code-block" style="font-size:0.88rem">
+    <div class="bar"><span class="r"></span><span class="y"></span><span class="g"></span></div>
+<span class="cm">-- ① Mesma sequence da live anterior</span>
+<span class="kw">CREATE SEQUENCE</span> <span class="fn">seq_game</span> <span class="kw">START WITH</span> <span class="num">1</span> <span class="kw">INCREMENT BY</span> <span class="num">1</span> <span class="kw">NOCACHE NOCYCLE</span>;
+
+<span class="cm">-- ② Mesma tabela — agora acessada via JPA</span>
+<span class="kw">CREATE TABLE</span> <span class="cls">tb_game</span> (
+  cd_game       <span class="kw">NUMBER(5)      PRIMARY KEY</span>,
+  nm_game       <span class="kw">VARCHAR2(100)  NOT NULL</span>,
+  nr_nota       <span class="kw">NUMBER(3,1)</span>,
+  nr_ano        <span class="kw">NUMBER(4)</span>,
+  dt_compra     <span class="kw">DATE</span>,
+  st_finalizado <span class="kw">NUMBER(1)      DEFAULT</span> <span class="num">0</span>
+);
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- S11 — SPRING BOOT PADRÕES -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="section-tag">padrões spring boot</div>
+  <h2>🌱 Padrões do Spring Boot</h2>
+  <div class="two-col" style="max-width:960px">
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div class="card purple">
+        <span class="card-icon">📦</span>
+        <div class="card-title">@Entity — Game.java</div>
+        <p class="card-text" style="line-height:1.8">
+          <strong style="color:var(--purple)">@Entity</strong> → "isso é uma tabela JPA"<br>
+          <strong style="color:var(--purple)">@Table(name="tb_game")</strong> → nome da tabela<br>
+          <strong style="color:var(--yellow)">@Id + @SequenceGenerator</strong> → chave primária<br>
+          <strong style="color:var(--cyan)">@Column(name="nm_game")</strong> → mapeia coluna
+        </p>
+      </div>
+      <div class="card green">
+        <span class="card-icon">🗃️</span>
+        <div class="card-title">GameRepository — CRUD Grátis!</div>
+        <p class="card-text" style="line-height:1.8">
+          <code style="color:var(--green)">extends JpaRepository&lt;Game, Long&gt;</code><br><br>
+          Herda automaticamente:<br>
+          save() · findById() · findAll()<br>
+          deleteById() · count()
+        </p>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div class="card orange">
+        <span class="card-icon">⚙️</span>
+        <div class="card-title">GameService — Lógica de Negócio</div>
+        <p class="card-text" style="line-height:1.8">
+          <strong style="color:var(--orange)">@Service</strong> → componente gerenciado<br>
+          <strong style="color:var(--orange)">@Autowired</strong> → injeta o repository<br>
+          Optional&lt;Game&gt; para null-safety<br>
+          Lança <code>GameNaoEncontradoException</code>
+        </p>
+      </div>
+      <div class="card cyan">
+        <span class="card-icon">🌐</span>
+        <div class="card-title">GameController — Os Endpoints</div>
+        <p class="card-text" style="line-height:1.8">
+          <strong style="color:var(--cyan)">@RestController</strong> → responde JSON<br>
+          <strong style="color:var(--cyan)">@RequestMapping("/api/games")</strong><br>
+          <strong style="color:var(--cyan)">@GetMapping</strong> · @PostMapping<br>
+          @RequestBody · @PathVariable
+        </p>
+      </div>
+    </div>
+  </div>
+  <div class="alert info" style="max-width:940px;font-size:0.9rem">
+    🎮 <strong>Diferença-chave da Live 01:</strong> antes você escrevia SQL com PreparedStatement. Agora o <strong>JPA</strong> faz isso automaticamente — você só chama <code>repository.save(game)</code>!
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- ══════════════════════════════════════════════════ -->
+<!-- S12 — PASSO 1: SPRING INITIALIZR -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="section-tag">passo 1 de 6 · setup</div>
+  <h2>🌐 Spring Initializr — Criando o Projeto</h2>
+  <div class="two-col" style="max-width:960px">
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div class="alert info" style="font-size:0.9rem">
+        🔗 <strong>start.spring.io</strong> — gera o projeto Maven pronto para abrir no IntelliJ
+      </div>
+      <div class="card yellow">
+        <span class="card-icon">⚙️</span>
+        <div class="card-title">Configurações do Projeto</div>
+        <p class="card-text" style="line-height:2.1">
+          <strong style="color:var(--yellow)">Project:</strong> Maven<br>
+          <strong style="color:var(--yellow)">Language:</strong> Java<br>
+          <strong style="color:var(--yellow)">Spring Boot:</strong> 3.5.5<br>
+          <strong style="color:var(--yellow)">Group:</strong> br.com.fiap<br>
+          <strong style="color:var(--yellow)">Artifact:</strong> games<br>
+          <strong style="color:var(--yellow)">Packaging:</strong> Jar<br>
+          <strong style="color:var(--yellow)">Java:</strong> 21
+        </p>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <p style="font-size:0.82rem;color:var(--dim);letter-spacing:0.12em;text-align:center">DEPENDÊNCIAS — ADD DEPENDENCIES</p>
+      <div class="layer-diagram" style="max-width:100%">
+        <div class="layer lv">
+          <span class="layer-icon">🌐</span>
+          <div class="layer-info">
+            <div class="layer-name">Spring Web</div>
+            <div class="layer-desc">REST API · Tomcat embutido · Jackson (JSON)</div>
+          </div>
+          <span class="layer-tag">WEB</span>
+        </div>
+        <div class="layer-connector"></div>
+        <div class="layer ld">
+          <span class="layer-icon">🗃️</span>
+          <div class="layer-info">
+            <div class="layer-name">Spring Data JPA</div>
+            <div class="layer-desc">ORM · Hibernate · substitui o JDBC manual</div>
+          </div>
+          <span class="layer-tag">SQL</span>
+        </div>
+        <div class="layer-connector"></div>
+        <div class="layer lm">
+          <span class="layer-icon">✅</span>
+          <div class="layer-info">
+            <div class="layer-name">Validation</div>
+            <div class="layer-desc">@NotBlank · @NotNull · @Positive</div>
+          </div>
+          <span class="layer-tag">I/O</span>
+        </div>
+        <div class="layer-connector"></div>
+        <div class="layer lb">
+          <span class="layer-icon">🏛️</span>
+          <div class="layer-info">
+            <div class="layer-name">Oracle Driver</div>
+            <div class="layer-desc">ojdbc11 · acesso ao banco Oracle FIAP</div>
+          </div>
+          <span class="layer-tag">SQL</span>
+        </div>
+      </div>
+      <div class="alert success" style="font-size:0.88rem">
+        ✅ Clique em <strong>GENERATE</strong> → descompacte → abra no IntelliJ (<em>Open → selecione a pasta</em>)
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- S13 — PASSO 2: APPLICATION.PROPERTIES + DDL-AUTO -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="section-tag">passo 2 de 6 · configuração</div>
+  <h2>⚙️ application.properties — Banco + JPA</h2>
+  <div class="two-col" style="max-width:960px">
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <p style="font-size:0.82rem;color:var(--dim);letter-spacing:0.1em">src/main/resources/application.properties</p>
+      <div class="code-block" style="font-size:0.85rem">
+        <div class="bar"><span class="r"></span><span class="y"></span><span class="g"></span></div>
+<span class="cm"># Nome da aplicação</span>
+spring.application.name=<span class="str">games</span>
+
+<span class="cm"># ── Oracle FIAP ──────────────────────────────────</span>
+spring.datasource.url=<span class="str">jdbc:oracle:thin:@oracle.fiap.com.br:1521:ORCL</span>
+spring.datasource.username=<span class="str">RM000000</span>  <span class="cm">← seu RM</span>
+spring.datasource.password=<span class="str">SUASENHA</span>  <span class="cm">← sua senha</span>
+spring.datasource.driver-class-name=<span class="str">oracle.jdbc.OracleDriver</span>
+
+<span class="cm"># ── JPA / Hibernate ──────────────────────────────</span>
+spring.jpa.database-platform=<span class="str">org.hibernate.dialect.OracleDialect</span>
+spring.jpa.show-sql=<span class="num">true</span>
+spring.jpa.properties.hibernate.format_sql=<span class="num">true</span>
+
+<span class="cm"># ddl-auto: none | create | create-drop | update | validate</span>
+spring.jpa.hibernate.ddl-auto=<span class="str">none</span>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <p style="font-size:0.82rem;color:var(--dim);letter-spacing:0.1em;text-align:center">O QUE CADA OPÇÃO DE ddl-auto FAZ?</p>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px 16px;display:flex;gap:14px;align-items:flex-start">
+          <span style="font-family:'Orbitron',sans-serif;font-size:0.78rem;color:var(--green);min-width:100px;padding-top:2px">none</span>
+          <span style="font-size:0.88rem;color:var(--dim)">JPA não mexe no banco. Você cria e gerencia as tabelas manualmente pelo SQL Developer. <strong style="color:var(--green)">← nossa escolha!</strong></span>
+        </div>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px 16px;display:flex;gap:14px;align-items:flex-start">
+          <span style="font-family:'Orbitron',sans-serif;font-size:0.78rem;color:var(--cyan);min-width:100px;padding-top:2px">validate</span>
+          <span style="font-size:0.88rem;color:var(--dim)">JPA só confere se a tabela bate com a entidade. Erro se divergir. Não altera nada.</span>
+        </div>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px 16px;display:flex;gap:14px;align-items:flex-start">
+          <span style="font-family:'Orbitron',sans-serif;font-size:0.78rem;color:var(--yellow);min-width:100px;padding-top:2px">update</span>
+          <span style="font-size:0.88rem;color:var(--dim)">JPA cria colunas novas se necessário, mas <strong style="color:var(--yellow)">nunca remove</strong>. Útil em dev, perigoso em produção.</span>
+        </div>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px 16px;display:flex;gap:14px;align-items:flex-start">
+          <span style="font-family:'Orbitron',sans-serif;font-size:0.78rem;color:var(--orange);min-width:100px;padding-top:2px">create</span>
+          <span style="font-size:0.88rem;color:var(--dim)">Dropa e recria a tabela ao subir. <strong style="color:var(--orange)">Apaga todos os dados!</strong> Só em dev/testes.</span>
+        </div>
+        <div style="background:var(--card);border:1px solid rgba(255,51,102,0.4);border-radius:8px;padding:12px 16px;display:flex;gap:14px;align-items:flex-start">
+          <span style="font-family:'Orbitron',sans-serif;font-size:0.78rem;color:var(--red);min-width:100px;padding-top:2px">create-drop</span>
+          <span style="font-size:0.88rem;color:var(--dim)">Cria ao subir e <strong style="color:var(--red)">dropa ao fechar</strong>. Apenas para testes automatizados.</span>
+        </div>
+      </div>
+      <div class="alert warn" style="font-size:0.88rem">
+        ⚠️ Como a tabela <strong>tb_game</strong> já existe no banco Oracle FIAP, usamos <code>none</code> para não mexer no que já está lá!
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- S14 — PASSO 3: ENTIDADE JPA -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="section-tag">passo 3 de 6 · model</div>
+  <h2>📦 Entidade JPA — Game.java</h2>
+  <div class="two-col" style="max-width:960px">
+    <div class="code-block" style="font-size:0.78rem">
+      <div class="bar"><span class="r"></span><span class="y"></span><span class="g"></span></div>
+<span class="kw">@Entity</span>                              <span class="cm">// "isso é uma tabela JPA"</span>
+<span class="kw">@Table</span>(name = <span class="str">"TB_GAME"</span>)             <span class="cm">// nome real da tabela Oracle</span>
+<span class="kw">public class</span> <span class="cls">Game</span> {
+
+  <span class="kw">@Id</span>
+  <span class="kw">@Column</span>(name = <span class="str">"cd_game"</span>)
+  <span class="kw">@SequenceGenerator</span>(name = <span class="str">"game"</span>, sequenceName = <span class="str">"sq_game"</span>, allocationSize = <span class="num">1</span>)
+  <span class="kw">@GeneratedValue</span>(generator = <span class="str">"game"</span>, strategy = GenerationType.<span class="fn">SEQUENCE</span>)
+  <span class="kw">private long</span> codigo;               <span class="cm">// mesma sequence da live 01!</span>
+
+  <span class="kw">@Column</span>(name = <span class="str">"nm_game"</span>)
+  <span class="kw">@NotBlank</span>
+  <span class="kw">@Size</span>(max = <span class="num">100</span>, min = <span class="num">3</span>)
+  <span class="kw">private</span> String nome;
+
+  <span class="kw">@Column</span>(name = <span class="str">"nr_nota"</span>)
+  <span class="kw">@DecimalMin</span>(value = <span class="str">"0"</span>, message = <span class="str">"Nota mínima é 0"</span>)
+  <span class="kw">@DecimalMax</span>(value = <span class="str">"10"</span>, message = <span class="str">"Nota máxima é 10"</span>)
+  <span class="kw">private double</span> nota;
+
+  <span class="kw">@Column</span>(name = <span class="str">"nr_ano"</span>)
+  <span class="kw">private int</span> ano;
+
+  <span class="kw">@Column</span>(name = <span class="str">"dt_compra"</span>)
+  <span class="kw">private</span> LocalDate dataCompra;      <span class="cm">// DATE → LocalDate</span>
+
+  <span class="kw">@Column</span>(name = <span class="str">"st_finalizado"</span>)
+  <span class="kw">private boolean</span> finalizado;        <span class="cm">// NUMBER(1) → boolean</span>
+
+  <span class="cm">// getters e setters...</span>
+}
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <p style="font-size:0.82rem;color:var(--dim);letter-spacing:0.1em;text-align:center">PRINCIPAIS ANOTAÇÕES JPA</p>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="background:var(--card);border-left:3px solid var(--purple);border-radius:0 8px 8px 0;padding:10px 14px">
+          <div style="font-family:'Orbitron',sans-serif;font-size:0.78rem;color:var(--purple);margin-bottom:4px">@Entity</div>
+          <div style="font-size:0.85rem;color:var(--dim)">Marca a classe como entidade JPA — o Hibernate vai gerenciá-la e mapeá-la para uma tabela.</div>
+        </div>
+        <div style="background:var(--card);border-left:3px solid var(--orange);border-radius:0 8px 8px 0;padding:10px 14px">
+          <div style="font-family:'Orbitron',sans-serif;font-size:0.78rem;color:var(--orange);margin-bottom:4px">@Table(name="TB_GAME")</div>
+          <div style="font-size:0.85rem;color:var(--dim)">Define o nome real da tabela no banco. Se omitir, usa o nome da classe em minúsculo.</div>
+        </div>
+        <div style="background:var(--card);border-left:3px solid var(--yellow);border-radius:0 8px 8px 0;padding:10px 14px">
+          <div style="font-family:'Orbitron',sans-serif;font-size:0.78rem;color:var(--yellow);margin-bottom:4px">@Id + @SequenceGenerator + @GeneratedValue</div>
+          <div style="font-size:0.85rem;color:var(--dim)">Define a chave primária e usa a sequence <strong style="color:var(--yellow)">sq_game</strong> do Oracle para gerar o código automaticamente.</div>
+        </div>
+        <div style="background:var(--card);border-left:3px solid var(--cyan);border-radius:0 8px 8px 0;padding:10px 14px">
+          <div style="font-family:'Orbitron',sans-serif;font-size:0.78rem;color:var(--cyan);margin-bottom:4px">@Column(name="nm_game")</div>
+          <div style="font-size:0.85rem;color:var(--dim)">Mapeia o atributo Java para a coluna exata do banco. Necessário quando o nome do atributo difere da coluna.</div>
+        </div>
+        <div style="background:var(--card);border-left:3px solid var(--green);border-radius:0 8px 8px 0;padding:10px 14px">
+          <div style="font-family:'Orbitron',sans-serif;font-size:0.78rem;color:var(--green);margin-bottom:4px">@NotBlank · @Size · @DecimalMin · @DecimalMax</div>
+          <div style="font-size:0.85rem;color:var(--dim)">Bean Validation — valida os dados recebidos. O <code>@Valid</code> no Controller ativa essas regras automaticamente.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- S15 — PASSO 4: REPOSITORY -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="section-tag">passo 4 de 6 · repository</div>
+  <h2>🗃️ GameRepository — CRUD sem SQL!</h2>
+  <div class="two-col" style="max-width:960px">
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div class="code-block" style="font-size:0.88rem">
+        <div class="bar"><span class="r"></span><span class="y"></span><span class="g"></span></div>
+<span class="kw">public interface</span> <span class="cls">GameRepository</span>
+    <span class="kw">extends</span> JpaRepository&lt;<span class="cls">Game</span>, Long&gt; {
+
+  <span class="cm">// Nenhum método adicional necessário!</span>
+  <span class="cm">// O JpaRepository já fornece todo o CRUD.</span>
+}
+      </div>
+      <div class="card green" style="padding:14px 18px">
+        <div class="card-title">CRUD Herdado de JpaRepository</div>
+        <p class="card-text" style="line-height:2">
+          <span class="fn" style="color:var(--cyan)">save(game)</span>       → INSERT ou UPDATE<br>
+          <span class="fn" style="color:var(--cyan)">findById(id)</span>     → SELECT WHERE PK = ? → <code>Optional&lt;Game&gt;</code><br>
+          <span class="fn" style="color:var(--cyan)">findAll()</span>        → SELECT * FROM tb_game<br>
+          <span class="fn" style="color:var(--cyan)">deleteById(id)</span>   → DELETE WHERE PK = ?<br>
+          <span class="fn" style="color:var(--cyan)">existsById(id)</span>   → verifica existência<br>
+          <span class="fn" style="color:var(--cyan)">count()</span>          → total de registros
+        </p>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div class="card orange">
+        <span class="card-icon">🔄</span>
+        <div class="card-title">Live 01 vs Agora</div>
+        <p class="card-text" style="line-height:1.9">
+          <strong style="color:var(--red)">Antes — GameDao.java:</strong><br>
+          <span style="color:var(--dim)">String sql = "INSERT INTO tb_game...";<br>
+          PreparedStatement stmt = con.prepareStatement(sql);<br>
+          stmt.setString(1, game.getNmGame());<br>
+          stmt.execute();</span><br><br>
+          <strong style="color:var(--green)">Agora — GameRepository:</strong><br>
+          <code style="color:var(--green)">repository.save(game);</code><br>
+          <span style="color:var(--dim)">O Hibernate gera e executa o SQL!</span>
+        </p>
+      </div>
+      <div class="alert warn" style="font-size:0.88rem">
+        🎮 <code>JpaRepository&lt;Game, Long&gt;</code> → <strong>Game</strong> é a entidade, <strong>Long</strong> é o tipo do ID (<code>cd_game</code>). Tem que bater com o @Id!
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- S16 — PASSO 5: SERVICE — É NECESSÁRIO? -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="section-tag">passo 5 de 6 · service</div>
+  <h2>⚙️ Por que criar o GameService?</h2>
+  <div class="two-col" style="max-width:960px">
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div class="card cyan">
+        <span class="card-icon">🏗️</span>
+        <div class="card-title">Separação de Responsabilidades</div>
+        <p class="card-text" style="line-height:1.8">
+          O <strong style="color:var(--cyan)">Controller</strong> cuida apenas de receber a requisição HTTP e devolver a resposta JSON.<br><br>
+          O <strong style="color:var(--cyan)">Service</strong> é onde colocamos a <strong>lógica de negócio</strong> — regras, validações e decisões que não têm nada a ver com HTTP.
+        </p>
+      </div>
+      <div class="card green">
+        <span class="card-icon">✅</span>
+        <div class="card-title">O que implementamos no Service</div>
+        <p class="card-text" style="line-height:1.9">
+          🔍 <strong style="color:var(--green)">Verificar existência</strong> antes de atualizar/deletar<br>
+          ⚠️ <strong style="color:var(--green)">Lançar exceção</strong> se game não existir → HTTP 404<br>
+          🛡️ <strong style="color:var(--green)">Optional&lt;T&gt;</strong> para evitar NullPointerException<br>
+          🏷️ <strong style="color:var(--green)">Garantir o ID</strong> correto no update (<code>game.setCdGame(id)</code>)
+        </p>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div class="code-block" style="font-size:0.82rem">
+        <div class="bar"><span class="r"></span><span class="y"></span><span class="g"></span></div>
+<span class="kw">@Service</span>
+<span class="kw">public class</span> <span class="cls">GameService</span> {
+
+  <span class="kw">@Autowired</span>
+  <span class="kw">private</span> <span class="cls">GameRepository</span> repository;
+
+  <span class="kw">public</span> <span class="cls">Game</span> <span class="fn">buscarPorId</span>(Long id) {
+    Optional&lt;<span class="cls">Game</span>&gt; opt = repository.<span class="fn">findById</span>(id);
+    <span class="kw">if</span> (opt.isPresent()) {
+      <span class="kw">return</span> opt.<span class="fn">get</span>();
+    } <span class="kw">else</span> {
+      <span class="kw">throw new</span> <span class="cls">GameNaoEncontradoException</span>(id);
+      <span class="cm">// Controller captura → devolve 404</span>
+    }
+  }
+
+  <span class="kw">public</span> <span class="cls">Game</span> <span class="fn">atualizar</span>(Long id, <span class="cls">Game</span> game) {
+    Optional&lt;<span class="cls">Game</span>&gt; existente = repository.<span class="fn">findById</span>(id);
+    <span class="kw">if</span> (existente.isPresent()) {
+      game.<span class="fn">setCdGame</span>(id); <span class="cm">// garante ID correto</span>
+      <span class="kw">return</span> repository.<span class="fn">save</span>(game);
+    } <span class="kw">else</span> {
+      <span class="kw">throw new</span> <span class="cls">GameNaoEncontradoException</span>(id);
+    }
+  }
+
+  <span class="kw">public</span> List&lt;<span class="cls">Game</span>&gt; <span class="fn">listarTodos</span>() {
+    <span class="kw">return</span> repository.<span class="fn">findAll</span>();
+  }
+  <span class="cm">// salvar(), excluir()...</span>
+}
+      </div>
+      <div class="alert purple" style="font-size:0.88rem">
+        🎮 <strong>Optional&lt;T&gt;</strong> é um "container" que pode ou não ter valor. <code>.isPresent()</code> verifica se achou algo — evita o famoso <strong>NullPointerException</strong> em produção!
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- S17 — PASSO 6: CONTROLLER REST -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="section-tag">passo 6 de 6 · controller</div>
+  <h2>🌐 GameController — Definindo a API</h2>
+  <div class="two-col" style="max-width:960px">
+    <div class="code-block" style="font-size:0.78rem">
+      <div class="bar"><span class="r"></span><span class="y"></span><span class="g"></span></div>
+<span class="kw">@RestController</span>                <span class="cm">// responde JSON automaticamente</span>
+<span class="kw">@RequestMapping</span>(<span class="str">"/api/games"</span>) <span class="cm">// URL base de todos os endpoints</span>
+<span class="kw">public class</span> <span class="cls">GameController</span> {
+
+  <span class="kw">@Autowired</span>
+  <span class="kw">private</span> <span class="cls">GameService</span> service;
+
+  <span class="kw">@GetMapping</span>
+  <span class="kw">@ResponseStatus</span>(HttpStatus.<span class="fn">OK</span>)          <span class="cm">// 200</span>
+  <span class="kw">public</span> List&lt;<span class="cls">Game</span>&gt; <span class="fn">listarTodos</span>() {
+    <span class="kw">return</span> service.<span class="fn">listarTodos</span>();
+  }
+
+  <span class="kw">@PostMapping</span>
+  <span class="kw">@ResponseStatus</span>(HttpStatus.<span class="fn">CREATED</span>)    <span class="cm">// 201</span>
+  <span class="kw">public</span> <span class="cls">Game</span> <span class="fn">salvar</span>(<span class="kw">@RequestBody @Valid</span> <span class="cls">Game</span> game) {
+    <span class="kw">return</span> service.<span class="fn">salvar</span>(game);
+  }
+
+  <span class="kw">@GetMapping</span>(<span class="str">"/{id}"</span>)
+  <span class="kw">public</span> ResponseEntity&lt;Object&gt; <span class="fn">buscarPorId</span>(<span class="kw">@PathVariable</span> Long id) {
+    <span class="kw">try</span> {
+      <span class="kw">return</span> ResponseEntity.<span class="fn">ok</span>(service.<span class="fn">buscarPorId</span>(id));
+    } <span class="kw">catch</span> (<span class="cls">GameNaoEncontradoException</span> e) {
+      <span class="kw">return</span> ResponseEntity.<span class="fn">status</span>(<span class="num">404</span>).<span class="fn">body</span>(e.getMessage());
+    }
+  }
+
+  <span class="kw">@PutMapping</span>(<span class="str">"/{id}"</span>)
+  <span class="kw">public</span> ResponseEntity&lt;Object&gt; <span class="fn">atualizar</span>(
+      <span class="kw">@PathVariable</span> Long id, <span class="kw">@RequestBody @Valid</span> <span class="cls">Game</span> game) {
+    <span class="kw">try</span> {
+      <span class="kw">return</span> ResponseEntity.<span class="fn">ok</span>(service.<span class="fn">atualizar</span>(id, game));
+    } <span class="kw">catch</span> (<span class="cls">GameNaoEncontradoException</span> e) {
+      <span class="kw">return</span> ResponseEntity.<span class="fn">status</span>(<span class="num">404</span>).<span class="fn">body</span>(e.getMessage());
+    }
+  }
+
+  <span class="kw">@DeleteMapping</span>(<span class="str">"/{id}"</span>)
+  <span class="kw">public</span> ResponseEntity&lt;Object&gt; <span class="fn">excluir</span>(<span class="kw">@PathVariable</span> Long id) {
+    <span class="kw">try</span> {
+      service.<span class="fn">excluir</span>(id);
+      <span class="kw">return</span> ResponseEntity.<span class="fn">noContent</span>().<span class="fn">build</span>(); <span class="cm">// 204</span>
+    } <span class="kw">catch</span> (<span class="cls">GameNaoEncontradoException</span> e) {
+      <span class="kw">return</span> ResponseEntity.<span class="fn">status</span>(<span class="num">404</span>).<span class="fn">body</span>(e.getMessage());
+    }
+  }
+}
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <p style="font-size:0.82rem;color:var(--dim);letter-spacing:0.1em;text-align:center">ANOTAÇÕES DO CONTROLLER</p>
+      <div style="display:flex;flex-direction:column;gap:7px">
+        <div style="background:var(--card);border-left:3px solid var(--cyan);border-radius:0 8px 8px 0;padding:9px 13px">
+          <div style="font-family:'Orbitron',sans-serif;font-size:0.72rem;color:var(--cyan);margin-bottom:3px">@RestController</div>
+          <div style="font-size:0.82rem;color:var(--dim)">= @Controller + @ResponseBody. Todo retorno é serializado para JSON pelo Jackson.</div>
+        </div>
+        <div style="background:var(--card);border-left:3px solid var(--purple);border-radius:0 8px 8px 0;padding:9px 13px">
+          <div style="font-family:'Orbitron',sans-serif;font-size:0.72rem;color:var(--purple);margin-bottom:3px">@RequestMapping / @GetMapping / @PostMapping...</div>
+          <div style="font-size:0.82rem;color:var(--dim)">Define a URL e o verbo HTTP que ativa cada método.</div>
+        </div>
+        <div style="background:var(--card);border-left:3px solid var(--green);border-radius:0 8px 8px 0;padding:9px 13px">
+          <div style="font-family:'Orbitron',sans-serif;font-size:0.72rem;color:var(--green);margin-bottom:3px">@RequestBody</div>
+          <div style="font-size:0.82rem;color:var(--dim)">Jackson lê o JSON do body da requisição e converte para o objeto Java Game.</div>
+        </div>
+        <div style="background:var(--card);border-left:3px solid var(--orange);border-radius:0 8px 8px 0;padding:9px 13px">
+          <div style="font-family:'Orbitron',sans-serif;font-size:0.72rem;color:var(--orange);margin-bottom:3px">@PathVariable</div>
+          <div style="font-size:0.82rem;color:var(--dim)">Extrai o <code>{id}</code> da URL: <code>GET /api/games/42</code> → <code>id = 42L</code>.</div>
+        </div>
+        <div style="background:var(--card);border-left:3px solid var(--yellow);border-radius:0 8px 8px 0;padding:9px 13px">
+          <div style="font-family:'Orbitron',sans-serif;font-size:0.72rem;color:var(--yellow);margin-bottom:3px">@ResponseStatus + ResponseEntity</div>
+          <div style="font-size:0.82rem;color:var(--dim)">Controla o status HTTP devolvido: 200, 201, 204, 404...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- S18 — TESTANDO COM INSOMNIA -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="section-tag">testando a api</div>
+  <h2>🧪 Testando com Insomnia</h2>
+  <div class="two-col" style="max-width:960px">
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div class="card purple">
+        <span class="card-icon">📥</span>
+        <div class="card-title">Setup Rápido</div>
+        <p class="card-text" style="line-height:1.9">
+          1️⃣ Baixe em <strong style="color:var(--purple)">insomnia.rest/download</strong><br>
+          2️⃣ Crie uma <strong>Collection</strong> → "Games API"<br>
+          3️⃣ Clique em <strong>New Request</strong> para cada endpoint<br>
+          4️⃣ Suba o Spring Boot antes: <strong>Run ▶ no IntelliJ</strong><br>
+          5️⃣ URL base: <code style="color:var(--cyan)">http://localhost:8080</code>
+        </p>
+      </div>
+      <table class="ep-table" style="font-size:0.82rem">
+        <thead>
+          <tr><th>VERBO</th><th>URL</th><th>BODY?</th><th>ESPERA</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="verb-pill get">GET</span></td>
+            <td><code>/api/games</code></td>
+            <td style="color:var(--dim)">—</td>
+            <td><span class="sc ok">200 + array JSON</span></td>
+          </tr>
+          <tr>
+            <td><span class="verb-pill get">GET</span></td>
+            <td><code>/api/games/1</code></td>
+            <td style="color:var(--dim)">—</td>
+            <td><span class="sc ok">200</span> ou <span class="sc nf">404</span></td>
+          </tr>
+          <tr>
+            <td><span class="verb-pill post">POST</span></td>
+            <td><code>/api/games</code></td>
+            <td style="color:var(--green)">JSON ✓</td>
+            <td><span class="sc cr">201 + game salvo</span></td>
+          </tr>
+          <tr>
+            <td><span class="verb-pill put">PUT</span></td>
+            <td><code>/api/games/1</code></td>
+            <td style="color:var(--green)">JSON ✓</td>
+            <td><span class="sc ok">200 + game atualizado</span></td>
+          </tr>
+          <tr>
+            <td><span class="verb-pill delete">DELETE</span></td>
+            <td><code>/api/games/1</code></td>
+            <td style="color:var(--dim)">—</td>
+            <td><span class="sc nc">204 sem body</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <p style="font-size:0.82rem;color:var(--dim);letter-spacing:0.1em">BODY JSON — POST e PUT</p>
+      <div class="json-box" style="font-size:0.88rem">
+        <div class="bar"><span class="r"></span><span class="y"></span><span class="g"></span></div>
+{<br>
+&nbsp;&nbsp;<span class="j-key">"nmGame"</span>: <span class="j-str">"Hollow Knight"</span>,<br>
+&nbsp;&nbsp;<span class="j-key">"nrNota"</span>: <span class="j-num">9.5</span>,<br>
+&nbsp;&nbsp;<span class="j-key">"nrAno"</span>: <span class="j-num">2017</span>,<br>
+&nbsp;&nbsp;<span class="j-key">"dtCompra"</span>: <span class="j-str">"2022-03-10"</span>,<br>
+&nbsp;&nbsp;<span class="j-key">"stFinalizado"</span>: <span class="j-bool">false</span><br>
+}<br>
+<span class="j-cm">// No Insomnia: Body → JSON (não form-data!)</span>
+      </div>
+      <div class="alert warn" style="font-size:0.88rem">
+        ⚠️ <strong>Atenção no POST</strong>: não envie o <code>cdGame</code> — ele é gerado automaticamente pela sequence Oracle!
+      </div>
+      <div class="alert success" style="font-size:0.88rem">
+        ✅ <strong>Dica de debug</strong>: se der 500, olhe o log no console do IntelliJ — o Hibernate imprime o SQL com erro. Se der 404 no GET /api/games, verifique se a URL está correta e o app está rodando na porta 8080.
+      </div>
+      <div class="alert info" style="font-size:0.88rem">
+        🎮 Teste o <strong>fluxo completo</strong>: POST um game → GET /api/games → GET /api/games/{id} → PUT para atualizar a nota → DELETE para remover!
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- S19 — RESUMO / MISSÃO COMPLETA -->
+<!-- ══════════════════════════════════════════════════ -->
+<div class="slide">
+  <div class="section-tag">missão completa</div>
+  <h1><span class="hl-green">API</span> <span class="hl-cyan">GAMES</span><br><span style="font-size:60%">CONCLUÍDA! 🏆</span></h1>
+  <div class="steps">
+    <div class="step">
+      <span class="step-num">1</span>
+      <div class="step-label">Spring<br>Initializr</div>
+    </div>
+    <div class="step-arrow">→</div>
+    <div class="step">
+      <span class="step-num">2</span>
+      <div class="step-label">application<br>.properties</div>
+    </div>
+    <div class="step-arrow">→</div>
+    <div class="step">
+      <span class="step-num">3</span>
+      <div class="step-label">@Entity<br>Game.java</div>
+    </div>
+    <div class="step-arrow">→</div>
+    <div class="step">
+      <span class="step-num">4</span>
+      <div class="step-label">GameRepo<br>JpaRepository</div>
+    </div>
+    <div class="step-arrow">→</div>
+    <div class="step">
+      <span class="step-num">5</span>
+      <div class="step-label">GameService<br>Optional</div>
+    </div>
+    <div class="step-arrow">→</div>
+    <div class="step">
+      <span class="step-num">6</span>
+      <div class="step-label">GameCtrl<br>REST ★</div>
+    </div>
+    <div class="step-arrow">→</div>
+    <div class="step">
+      <span class="step-num">7</span>
+      <div class="step-label">Testes<br>Insomnia</div>
+    </div>
+  </div>
+  <div class="cards-grid cols-4" style="max-width:940px">
+    <div class="card green" style="padding:14px 16px">
+      <span class="card-icon">🌐</span>
+      <div class="card-title">API Pública</div>
+      <p class="card-text">Qualquer cliente HTTP acessa seus games via URL — sem terminal!</p>
+    </div>
+    <div class="card cyan" style="padding:14px 16px">
+      <span class="card-icon">⚡</span>
+      <div class="card-title">Sem SQL Manual</div>
+      <p class="card-text">JPA substitui PreparedStatement — mesma tabela, zero código SQL</p>
+    </div>
+    <div class="card purple" style="padding:14px 16px">
+      <span class="card-icon">📦</span>
+      <div class="card-title">JSON Automático</div>
+      <p class="card-text">Jackson converte Game ↔ JSON sem uma linha de código extra</p>
+    </div>
+    <div class="card orange" style="padding:14px 16px">
+      <span class="card-icon">🏗️</span>
+      <div class="card-title">Padrão Mercado</div>
+      <p class="card-text">Controller → Service → Repository é a base de todo back-end Java real</p>
+    </div>
+  </div>
+</div>
+
+</div><!-- /slides -->
+
+<div id="bottom-nav">
+  <button class="nav-btn" id="btn-prev" onclick="goTo(current - 1)">← ANTERIOR</button>
+  <div id="dots"></div>
+  <button class="nav-btn next" id="btn-next" onclick="goTo(current + 1)">PRÓXIMO →</button>
+</div>
+
+<script>
+  // Cursor
+  const cursorEl = document.getElementById('cursor');
+  document.addEventListener('mousemove', e => {
+    cursorEl.style.left = e.clientX + 'px';
+    cursorEl.style.top  = e.clientY + 'px';
+  });
+
+  // Date
+  const dateEl = document.getElementById('live-date');
+  if (dateEl) {
+    dateEl.textContent = '30/04/2026';
+  }
+
+  const slides = document.querySelectorAll('.slide');
+  const total  = slides.length;
+  let current  = 0;
+
+  const dotsEl = document.getElementById('dots');
+  const curEl  = document.getElementById('cur');
+  const totEl  = document.getElementById('tot');
+  const bar    = document.getElementById('progress-bar');
+
+  totEl.textContent = String(total).padStart(2, '0');
+
+  for (let i = 0; i < total; i++) {
+    const d = document.createElement('div');
+    d.className = 'dot' + (i === 0 ? ' active' : '');
+    d.addEventListener('click', () => goTo(i));
+    dotsEl.appendChild(d);
+  }
+
+  function goTo(n) {
+    if (n < 0 || n >= total) return;
+    slides[current].classList.remove('active');
+    dotsEl.children[current].classList.remove('active');
+    current = n;
+    slides[current].classList.add('active');
+    dotsEl.children[current].classList.add('active');
+    curEl.textContent = String(current + 1).padStart(2, '0');
+    bar.style.width = ((current + 1) / total * 100) + '%';
+    document.getElementById('btn-prev').style.opacity = current === 0 ? '0.3' : '1';
+    document.getElementById('btn-next').style.opacity = current === total - 1 ? '0.3' : '1';
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') goTo(current + 1);
+    if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')                     goTo(current - 1);
+  });
+
+  let startX = 0;
+  document.addEventListener('touchstart', e => { startX = e.touches[0].clientX; });
+  document.addEventListener('touchend',   e => {
+    const dx = e.changedTouches[0].clientX - startX;
+    if (Math.abs(dx) > 50) goTo(current + (dx < 0 ? 1 : -1));
+  });
+
+  bar.style.width = (1 / total * 100) + '%';
+  document.getElementById('btn-prev').style.opacity = '0.3';
+</script>
+</body>
+</html>
